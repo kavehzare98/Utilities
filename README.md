@@ -9,6 +9,12 @@ Repo where I keep all the little utilities I write for myself.
     - User can also specify a file (or filepath) to copy from.
 2. TBD...
 
+## Key Assumptions
+
+1. I'm using Ubuntu Linux, hence, I'm sure these utilities won't work on Windows and may fail on Mac.
+2. I've pre-installed `xclip` for copying text into clipboard directly from terminal.
+3. I have Python version `3.13+` already installed on my system.
+
 ## Set Up
 ```bash
 # Change Permissions for Utility
