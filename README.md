@@ -1,5 +1,5 @@
 # Utilities
-Repo where I keep all the little utilities I write for myself.
+Repo where I keep all the utilities I write for myself.
 
 ## Current Utilities
 
