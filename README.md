@@ -4,7 +4,7 @@ Repo where I keep all the utilities I write for myself.
 ## Current Utilities
 
 1. Line Copy (`lin_cpy.py`)
-    - This utility copies specified lines of text from file.
+    - This utility copies specified lines of text from file into clipboard.
     - By default, the tool finds the latest edited file in the current directory.
     - User can also specify a file (or filepath) to copy from.
 2. TBD...
