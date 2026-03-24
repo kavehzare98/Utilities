@@ -4,28 +4,15 @@ from os import listdir, getcwd, system, path
 from os.path import isfile, join
 
 def get_all_files_in_dir(path: str) -> list:
-	# only_files = [join(path, f) for f in listdir(path) if isfile(join(path, f))]
 	only_files = [f for f in listdir(path) if isfile(join(path, f))]
 	return only_files
 
 def get_last_accessed_file(files: list[str]) -> str:
-	last_time = None
-	last_file = None
-	for file_path in files:
-		curr_time = path.getmtime(file_path)
-		if last_time and curr_time > last_time:
-			last_time, last_file = curr_time, file_path
-		#	if curr_time > last_time:
-		#		last_time = curr_time
-		#		last_file = file_path
-		else:
-			last_time = curr_time
-			last_file = file_path
-	return last_file
+	return max(files, key=path.getatime)
 
 def prompt_for_lines() -> tuple[int]:
-	start = input("Enter Starting Line: ").strip()
-	end = input("Enter Ending Line: ").strip()
+	start = input("Enter Starting Line #:\t").strip()
+	end = input("Enter Ending Line #:\t").strip()
 	return (start, end)
 
 def display_help():
@@ -42,11 +29,10 @@ def main():
 
 	argc = len(argv)
 	execute = True
+	message = "WELCOME to Kaveh's Vim Line Copy TOOL"
 
 	if argc == 1:
-		message = "WELCOME to Kaveh's Vim Line Copy TOOL"
 		print(message, "\n", len(message)*"=", sep='')
-
 		current_path = getcwd()
 		all_files = get_all_files_in_dir(current_path)
 		last_file = get_last_accessed_file(all_files)
@@ -59,10 +45,10 @@ def main():
 			execute = False
 			display_help()
 		else:
-			message = "WELCOME to Kaveh's Vim Line Copy TOOL"
-			print(message, "\n", len(message)*"=", sep='')
-			start_line, end_line = prompt_for_lines()
 			file_name = argv[1]
+			print(message, "\n", len(message)*"=", sep='')
+			print(f"currently selected file: {file_name}\n")
+			start_line, end_line = prompt_for_lines()
 
 	if execute:
 		command = f"sed -n '{start_line},{end_line}p' {file_name} | xclip -selection clipboard"
