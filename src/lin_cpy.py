@@ -12,11 +12,12 @@ def get_last_accessed_file(files: list[str]) -> str:
 	last_time = None
 	last_file = None
 	for file_path in files:
-		curr_time = path.getatime(file_path)
-		if last_time:
-			if curr_time > last_time:
-				last_time = curr_time
-				last_file = file_path
+		curr_time = path.getmtime(file_path)
+		if last_time and curr_time > last_time:
+			last_time, last_file = curr_time, file_path
+		#	if curr_time > last_time:
+		#		last_time = curr_time
+		#		last_file = file_path
 		else:
 			last_time = curr_time
 			last_file = file_path
