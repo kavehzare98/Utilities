@@ -1,3 +1,4 @@
+import csv
 from typing import Any
 
 def open_and_read_file(file: str) -> [str]:
@@ -47,7 +48,6 @@ def process_data(pre_processed_data: [str]) -> Any:
         cpu_core_raw = row[3][1:-1]
         cpu_core_split = cpu_core_raw.split(",")
         cpu_core_utils = [float(core.split("%")[0]) for core in cpu_core_split]
-        avg_cpu_core_util = sum(cpu_core_utils) / len(cpu_core_utils)
 
         # RAM Bus Utilization
         ram_bus_util_percent = float(row[4][:-1])
@@ -62,9 +62,10 @@ def process_data(pre_processed_data: [str]) -> Any:
         temp_ao_deg_cel = float(row[9].split("@")[1][:-1])
 
         new_row = [ram_util_percent, lfb_num, swap_percent,
-                   [cpu_core_utils, avg_cpu_core_util], ram_bus_util_percent,
+                   cpu_core_utils, ram_bus_util_percent,
                    gpu_util_percent, temp_pom_deg_cel, temp_cpu_deg_cel,
                    temp_thermal_deg_cel, temp_ao_deg_cel]
+        
         processed_data.append(new_row)
     return processed_data
 
@@ -84,23 +85,19 @@ def display_averages(data: Any) -> None:
         column_values = [row[col] for row in data[1:]]
 
         if col == 3:
-            num_cores = len(column_values[0][0])
+            num_cores = len(column_values[0])
             core_sums = [0.0] * num_cores
-            total_avg_sum = 0.0
 
-            for entry in column_values:
-                cores_list = entry[0]
-                row_avg = entry[1]
-                total_avg_sum += row_avg
-                for i in range(num_cores):
-                    core_sums[i] += cores_list[i]
+            for i in range(num_cores):
+                for cores_list in column_values:
+                    core_util = cores_list[i]
+                    core_sums[i] += core_util
 
             avg_per_core = [round(c_sum / num_rows, 2) for c_sum in core_sums]
-            avg_of_averages = round(total_avg_sum / num_rows, 2)
+            avg_core_util = sum(avg_per_core) / num_cores
 
-            print(f"{col_names[col]}:")
-            print(f"  -> Avg per Core:{'':<{padding-15}}{avg_per_core}")
-            print(f"  -> Average of Averages:{'':<{padding-23}}{avg_of_averages}%")
+            title = f"{col_names[col]}:"
+            print(f"{title:<{padding}}{avg_per_core}  =>  {avg_core_util}%")
 
         else:
             avg_value = sum(column_values) / num_rows
@@ -123,10 +120,16 @@ def main():
     column_names = ['RAM Utilization', 'Largest Free Block (lfb)',
                     'SWAP Space (RAM handling)', 'CPU Utilization by core',
                     'RAM Bus Utilization (EMC)', 'GPU Utilization',
-                    'Temp_POM', 'Temp_CPU', 'Temp_thermal', 'Temp_AO']
+                    'Temp POM', 'Temp CPU', 'Temp thermal', 'Temp AO']
 
     unprocessed_data = pre_process_data(raw_content, column_names)
     processed_data = process_data(unprocessed_data)
+
+    with open('data.csv', 'w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=',')
+        for row in processed_data:
+            csv_writer.writerow(row)
+
     display_averages(processed_data)
 
 if __name__ == "__main__":
