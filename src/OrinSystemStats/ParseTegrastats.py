@@ -3,14 +3,16 @@ import random
 import re
 from datetime import datetime
 
-column_names = ["Timestamp", "RAM Used (MB)", "RAM Total (MB)", "LFB Count",
+column_names = [
+    "Timestamp", "RAM Used (MB)", "RAM Total (MB)", "LFB Count",
     "LFB Size (MB)", "SWAP Used (MB)", "SWAP Total (MB)",
-    "CPU Core Utilizations (%)", "CPU Core Clocks (MHz)",   "EMC Util (%)",
+    "CPU Core Utilizations (%)", "CPU Core Clocks (MHz)", "EMC Util (%)",
     "GPU Util (%)", "GPU Clock (MHz)", "NVDEC Active", "NVJPG Active",
     "NVJPG1 Active", "VIC Active", "OFA Active", "APE Clock (MHz)",
     "Temp CPU (C)", "Temp SOC2 (C)", "Temp SOC0 (C)", "Temp GPU (C)",
     "Temp TJ (C)", "Temp SOC1 (C)", "VDD_IN Current (mW)",
-    "VDD_CPU_GPU_CV Current (mW)", "VDD_SOC Current (mW)" ]
+    "VDD_CPU_GPU_CV Current (mW)", "VDD_SOC Current (mW)"
+]
 
 def parse_tegrastats(line: str):
     data = []
@@ -56,7 +58,6 @@ def parse_tegrastats(line: str):
         emc_clk_mhz = int(emc_freq.group(2))
         data.append(emc_used_percent)
 
-
     gpu_util = re.search(r"GR3D_FREQ (\d+)%@\[(\d+)\]", line)
     if gpu_util:
         gpu_util_percent = int(gpu_util.group(1))
@@ -82,20 +83,14 @@ def parse_tegrastats(line: str):
         ape_num = int(ape.group(1))
         data.append(ape_num)
 
-    temps = re.search(r"cpu@(\d+\.\d+)C soc2@(\d+\.\d+)C soc0@(\d+\.\d+)C gpu@(\d+\.\d+)C tj@(\d+\.\d+)C soc1@(\d+\.\d+)C", line)
+    temps = re.search(r"cpu@(\d+(?:\.\d+)?)C soc2@(\d+(?:\.\d+)?)C soc0@(\d+(?:\.\d+)?)C gpu@(\d+(?:\.\d+)?)C tj@(\d+(?:\.\d+)?)C soc1@(\d+(?:\.\d+)?)C", line)
     if temps:
-        temp_cpu = float(temps.group(1))
-        temp_soc2 = float(temps.group(2))
-        temp_soc0 = float(temps.group(3))
-        temp_gpu = float(temps.group(4))
-        temp_tj = float(temps.group(5))
-        temp_soc1 = float(temps.group(6))
-        data.append(temp_cpu)
-        data.append(temp_soc2)
-        data.append(temp_soc0)
-        data.append(temp_gpu)
-        data.append(temp_tj)
-        data.append(temp_soc1)
+        data.append(float(temps.group(1)))
+        data.append(float(temps.group(2)))
+        data.append(float(temps.group(3)))
+        data.append(float(temps.group(4)))
+        data.append(float(temps.group(5)))
+        data.append(float(temps.group(6)))
 
     vdd_in = re.search(r"VDD_IN (\d+)mW", line)
     if vdd_in:
@@ -116,17 +111,17 @@ def parse_tegrastats(line: str):
 
 def random_generator() -> str:
     now = datetime.now()
-    time = now.strftime("%m-%d-%Y %H:%M:%S")
-    max_temp = 80 # degrees Celsius
+    timestamp_str = now.strftime("%m-%d-%Y %H:%M:%S")
+    max_temp = 80
 
     cpu = max_temp * random.random()
     gpu = max_temp * random.random()
     soc0 = max_temp * random.random()
     soc1 = max_temp * random.random()
-    soc2= max_temp * random.random()
+    soc2 = max_temp * random.random()
     tj = max_temp * random.random()
 
-    sample = f"{time} RAM {random.randint(1,7607)}/7607MB (lfb {random.randint(1,5)}x4MB) SWAP 0/3804MB (cached 0MB) CPU [{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729] EMC_FREQ 0%@2133 GR3D_FREQ 0%@[305] NVDEC off NVJPG off NVJPG1 off VIC off OFA off APE 200 cpu@{cpu}C soc2@{soc2}C soc0@{soc0}C gpu@{gpu}C tj@{tj}C soc1@{soc1}C VDD_IN {random.randint(1000,12000)}mW/4647mW VDD_CPU_GPU_CV {random.randint(1000,12000)}mW/520mW VDD_SOC {random.randint(1000,12000)}mW/1442mW"
+    sample = f"{timestamp_str} RAM {random.randint(1,7607)}/7607MB (lfb {random.randint(1,5)}x4MB) SWAP 0/3804MB (cached 0MB) CPU [{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729,{random.randint(0,100)}%@729] EMC_FREQ 0%@2133 GR3D_FREQ 0%@[305] NVDEC off NVJPG off NVJPG1 off VIC off OFA off APE 200 cpu@{cpu}C soc2@{soc2}C soc0@{soc0}C gpu@{gpu}C tj@{tj}C soc1@{soc1}C VDD_IN {random.randint(1000,12000)}mW/4647mW VDD_CPU_GPU_CV {random.randint(1000,12000)}mW/520mW VDD_SOC {random.randint(1000,12000)}mW/1442mW"
     return sample
 
 def update_DataFrame(df, new_row):
@@ -136,19 +131,21 @@ def main():
     file_name = "actual_log.txt"
     parsed_file_content = [column_names]
 
-    with open(file_name, "r") as f:
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            parsed_line = parse_tegrastats(line)
-            parsed_file_content.append(parsed_line)
+    try:
+        with open(file_name, "r") as f:
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                parsed_line = parse_tegrastats(line)
+                parsed_file_content.append(parsed_line)
 
-
-    with open('data.csv', 'w', newline='') as csv_file:
-        csv_writer = csv.writer(csv_file, delimiter=',')
-        for row in parsed_file_content:
-            csv_writer.writerow(row)
+        with open('data.csv', 'w', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+            for row in parsed_file_content:
+                csv_writer.writerow(row)
+    except FileNotFoundError:
+        pass
 
 if __name__ == "__main__":
     main()
